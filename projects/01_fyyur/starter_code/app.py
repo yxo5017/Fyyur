@@ -251,6 +251,41 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
+  error = False
+  body = {}
+  try:
+    id = 1
+    name = request.get_json()['name']
+    city = request.get_json()['city']
+    state = request.get_json()['state']
+    address = request.get_json()['address']
+    phone = request.get_json()['phone']
+    genres = request.get_json()['genres']
+    image_link = request.get_json()['image_link']
+    facebook_link = request.get_json()['facebook_link']
+    website_link = request.get_json()['website_link']
+    venue = Venue(id=id, name=name, city=city, state=state, address=address, phone=phone, genres=genres, image_link=image_link, facebook_link=facebook_link, website_link=website_link)
+    db.session.add(venue)
+    db.session.commit()
+    body['id'] = venue.id
+    body['city'] = venue.city
+    body['state'] = venue.state
+    body['address'] = venue.address
+    body['phone'] = venue.phone
+    body['genres'] = venue.genres
+    body['image_link'] = venue.image_link
+    body['facebook_link'] = venue.facebook_link
+    body['website_link'] = venue.website_link
+  except():
+    db.session.rollback()
+    error = True
+  finally:
+    db.session.close()
+  if error:
+    abort(500)
+  else:
+    return jsonify(body)
+
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
 
