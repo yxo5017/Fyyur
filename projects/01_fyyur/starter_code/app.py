@@ -35,7 +35,7 @@ migrate = Migrate(app, db)
 #----------------------------------------------------------------------------#
 
 # creating association table
-show = db.Table('Show', db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True), db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id', primary_key=True)))
+association_table_for_show = db.Table('association_table_for_show', db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True), db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id', primary_key=True)))
 
 class Venue(db.Model):
     __tablename__ = 'Venue'
@@ -54,7 +54,7 @@ class Venue(db.Model):
     # Added 'looking_for_talent, and seeking_description for new column
     looking_for_talent = db.Column(db.Boolean, nullable=False, default=False)
     seeking_description = db.Column(db.String(500))
-    shows = db.relationship('Artist', secondary=show, backref=db.backref('artist', lazy=True))
+    shows = db.relationship('Artist', secondary=association_table_for_show, backref=db.backref('artist', lazy=True))
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
