@@ -34,6 +34,9 @@ migrate = Migrate(app, db)
 # Models.
 #----------------------------------------------------------------------------#
 
+# creating association table
+show = db.Table('Show', db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True), db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id', primary_key=True)))
+
 class Venue(db.Model):
     __tablename__ = 'Venue'
 
@@ -43,8 +46,15 @@ class Venue(db.Model):
     state = db.Column(db.String(120))
     address = db.Column(db.String(120))
     phone = db.Column(db.String(120))
+    genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    website_link = db.Column(db.String(120))
+    
+    # Added 'looking_for_talent, and seeking_description for new column
+    looking_for_talent = db.Column(db.Boolean, nullable=False, default=False)
+    seeking_description = db.Column(db.String(500))
+    shows = db.relationship('Artist', secondary=show, backref=db.backref('artist', lazy=True))
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -59,8 +69,23 @@ class Artist(db.Model):
     genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    website_link = db.Column(db.String(120))
+
+    # Added 'looking_for_venues, and seeking_description for new column
+    looking_for_venues = db.Column(db.Boolean, nullable=False, default=False)
+    seeking_description = db.Column(db.String(500))
+    shows = db.relationship('Show', backref='venue', lazy=True)
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
+
+# Created Show table with id, venue_id, and artist_id
+# Since show to venue / artist is 'Many-To-One' relationship, they are related by ForeignKey constraint
+class Show(db.Model):
+  __tablename__ = 'Show'
+  id = db.Column(db.Integer, primary_key=True)
+  venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
+  artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
+
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
@@ -261,6 +286,7 @@ def artists():
     "name": "The Wild Sax Band",
   }]
   return render_template('pages/artists.html', artists=data)
+  ## return render_template('pages/artists.html', artists=Artist.query.all())
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
@@ -402,6 +428,7 @@ def edit_venue(venue_id):
   }
   # TODO: populate form with values from venue with ID <venue_id>
   return render_template('forms/edit_venue.html', form=form, venue=venue)
+
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
