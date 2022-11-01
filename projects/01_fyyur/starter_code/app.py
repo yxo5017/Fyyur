@@ -121,79 +121,33 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_upcoming_shows should be aggregated based on number of upcoming shows per venue.
-  data = []
-  for n in range(len(Venue.query.all())):
-    if n == 0: 
-      sample = {
-        "city": Venue.query.get(Venue.query[n].id).city,
-        "state": Venue.query.get(Venue.query[n].id).state,
-        "venues": [{
-          "id": Venue.query.get(Venue.query[n].id).id,
-          "name": Venue.query.get(Venue.query[n].id).name,
-          "num_upcoming_shows": 0,
-      }]
-    }
-      data.append(sample)
-    else:
-      sample = {
-        "city": Venue.query.get(Venue.query[n].id).city,
-        "state": Venue.query.get(Venue.query[n].id).state,
-        "venues": [{
-              "id": Venue.query.get(Venue.query[n].id).id,
-              "name": Venue.query.get(Venue.query[n].id).name,
-              "num_upcoming_shows": 0,
-        }]
-      }
-      for i in range(n):
-        if Venue.query.get(Venue.query[n].id).city == Venue.query.get(Venue.query[i].id).city and Venue.query.get(Venue.query[n].id).state == Venue.query.get(Venue.query[i].id).state:
-          print("yes")
-          rest = {
-            "id": Venue.query.get(Venue.query[n].id).id,
-            "name": Venue.query.get(Venue.query[n].id).name,
-            "num_upcoming_shows": 0,
-          }
-          print(sample["venues"].append(rest))
-          print("test")
-        elif n == i + 1:
-          sample = {
-            "city": Venue.query.get(Venue.query[n].id).city,
-            "state": Venue.query.get(Venue.query[n].id).state,
-            "venues": [{
-              "id": Venue.query.get(Venue.query[n].id).id,
-              "name": Venue.query.get(Venue.query[n].id).name,
-              "num_upcoming_shows": 0,
-          }]
-        }
-          data.append(sample)
-  print(data)
-    #   }
-    # print("n:" + str(n))
-    # for m in range(i):
-    #   m += 1
-    #   if m == i:
-    #     print("addd" + ":" + Venue.query.get(Venue.query[n].id).city + ":" +Venue.query.get(Venue.query[n].id).state)
-    #   elif Venue.query.get(Venue.query[n].id).city == Venue.query.get(Venue.query[m].id).city and Venue.query.get(Venue.query[n].id).state == Venue.query.get(Venue.query[m].id).state:
-    #     print("add" + ":" + Venue.query.get(Venue.query[n].id).city + ":" +Venue.query.get(Venue.query[n].id).state)
-    #   else:
-    #     print("do nothing")
-    # i += 1
-
-    # sample2 = {
-    #   "venues": {
-    #     "id": Venue.query.get(Venue.query[n].id).id,
-    #     "name": Venue.query.get(Venue.query[n].id).name,
-    #     "num_upcoming_shows": 0,
-    #   }
-    # }
-    # sample.update(sample2)
-    # print(sample)
-    # data.append(sample)    
-
-    # for m in range(len(Venue.query.all())):
-    #   if Venue.query.get(Venue.query[n].id).city == Venue.query.get(Venue.query[m].id).city and Venue.query.get(Venue.query[n].id).state == Venue.query.get(Venue.query[m].id).state:
-    #     print(Venue.query.get(Venue.query[n].id).city)
-  # print(data[0])
-
+  locals = []
+  venues = Venue.query.all()
+  print(venues)
+  places = Venue.query.distinct(Venue.city, Venue.state).all()
+  print(places)
+  i = 0
+  for place in places:
+    temp_venues = []
+    i = i + 1
+    print(i)
+    print(place)
+    for venue in venues:
+      if venue.city == place.city and venue.state == place.state:
+        num_shows = 0
+        for show in venue.shows:
+          num_shows += 1
+        temp_venues.append({
+          'id': venue.id,
+          'name': venue.name,
+          'num_shows': num_shows,
+        })
+    locals.append({
+      'city': place.city,
+      'state': place.state
+    })
+  print(locals)
+  print(temp_venues)
   # data=[{
   #   "city": "San Francisco",
   #   "state": "CA",
@@ -215,7 +169,7 @@ def venues():
   #     "num_upcoming_shows": 0,
   #   }]
   # }]
-  return render_template('pages/venues.html', areas=data);
+  return render_template('pages/venues.html', areas=locals);
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
