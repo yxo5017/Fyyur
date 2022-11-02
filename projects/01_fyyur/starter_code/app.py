@@ -291,19 +291,21 @@ def create_venue_submission():
   state = request.form.get('state', '')
   address = request.form.get('address', '')
   phone = request.form.get('phone', '')
-  genres = request.form.get('genres', '')
+  genres = request.form.getlist('genres')
   image_link = request.form.get('image_link', '')
   facebook_link = request.form.get('facebook_link', '')
   website_link = request.form.get('website_link', '')
-  looking_for_talent_params = request.form.get('seeking_talent', '')
-  if looking_for_talent_params == 'y':
-    looking_for_talent = True
+  looking_for_artist_params = request.form.get('seeking_talent', '')
+  if looking_for_artist_params == 'y':
+    looking_for_artist = True
   else:
-    looking_for_talent = False
+    looking_for_artist = False
+  print(looking_for_artist)
   seeking_description = request.form.get('seeking_description', '')
   
   try:
-    venue = Venue(name=name, city=city, state=state, address=address, phone=phone, genres=genres, image_link=image_link, facebook_link=facebook_link, website_link=website_link, looking_for_talent=looking_for_talent, seeking_description=seeking_description)
+    venue = Venue(name=name, city=city, state=state, address=address, phone=phone, genres=genres, image_link=image_link, facebook_link=facebook_link, website_link=website_link, looking_for_artist=looking_for_artist, seeking_description=seeking_description)
+    print(venue)
     db.session.add(venue)
     db.session.commit()
     flash('Venue ' + request.form['name'] + ' was successfully listed!')
@@ -542,11 +544,12 @@ def edit_venue_submission(venue_id):
   state = request.form.get('state', '')
   phone = request.form.get('phone', '')
   address = request.form.get('address', '')
-  genres = request.form.get('genres', '')
+  genres = request.form.getlist('genres')
   facebook_link = request.form.get('facebook_link', '')
   image_link = request.form.get('image_link', '')
   website_link = request.form.get('website_link', '')
   looking_for_talent = request.form.get('seeking_talent', '')
+  print(looking_for_talent)
   seeking_description = request.form.get('seeking_description', '')
   print(genres)
   try:
@@ -560,7 +563,7 @@ def edit_venue_submission(venue_id):
     old_venue.facebook_link = facebook_link
     old_venue.image_link = image_link
     old_venue.website_link = website_link
-    # old_venue.looking_for_talent = 'y'
+    old_venue.looking_for_talent = looking_for_talent
     old_venue.seeking_description = seeking_description
     db.session.commit()
     flash('Venue ' + request.form['name'] + ' was successfully updated!')
@@ -600,6 +603,7 @@ def create_artist_submission():
   
   try:
     artist = Artist(name=name, city=city, state=state, phone=phone, genres=genres, image_link=image_link, facebook_link=facebook_link, website_link=website_link, looking_for_venues=looking_for_venues, seeking_description=seeking_description)
+    print(artist)
     db.session.add(artist)
     db.session.commit()
     flash('Artist ' + request.form['name'] + ' was successfully listed!')
