@@ -67,7 +67,7 @@ class Artist(db.Model):
     city = db.Column(db.String(120))
     state = db.Column(db.String(120))
     phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
+    genres = db.Column(db.ARRAY(db.String), nullable=False)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
     website_link = db.Column(db.String(120))
@@ -123,15 +123,13 @@ def venues():
   #       num_upcoming_shows should be aggregated based on number of upcoming shows per venue.
   locals = []
   venues = Venue.query.all()
-  print(venues)
   places = Venue.query.distinct(Venue.city, Venue.state).all()
-  print(places)
+
   i = 0
   for place in places:
+
     temp_venues = []
     i = i + 1
-    print(i)
-    print(place)
     for venue in venues:
       if venue.city == place.city and venue.state == place.state:
         num_shows = 0
@@ -144,10 +142,11 @@ def venues():
         })
     locals.append({
       'city': place.city,
-      'state': place.state
+      'state': place.state,
+      'venues': temp_venues
     })
   print(locals)
-  print(temp_venues)
+
   # data=[{
   #   "city": "San Francisco",
   #   "state": "CA",
@@ -477,13 +476,13 @@ def edit_artist_submission(artist_id):
   city = request.form.get('city', '')
   state = request.form.get('state', '')
   phone = request.form.get('phone', '')
-  genres = request.form.get('genres', '')
+  genres = request.form.getlist('genres')
   facebook_link = request.form.get('facebook_link', '')
   image_link = request.form.get('image_link', '')
   website_link = request.form.get('website_link', '')
   looking_for_venue_params = request.form.get('seeking_venue', '')
   seeking_description = request.form.get('seeking_description', '')
-  
+  print(genres)
   try:
     # new_artist = Artist(name=name, city=city, state=state, phone=phone, genres=genres, image_link=image_link, facebook_link=facebook_link, website_link=website_link, looking_for_venues=looking_for_venues, seeking_description=seeking_description)
     old_artist = Artist.query.get(artist_id)
@@ -549,7 +548,7 @@ def edit_venue_submission(venue_id):
   website_link = request.form.get('website_link', '')
   looking_for_talent = request.form.get('seeking_talent', '')
   seeking_description = request.form.get('seeking_description', '')
-
+  print(genres)
   try:
     old_venue = Venue.query.get(venue_id)
     old_venue.name = name
@@ -613,10 +612,6 @@ def create_artist_submission():
   # called upon submitting the new artist listing form
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
-
-  # on successful db insert, flash success
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
   return render_template('pages/home.html')
 
 
@@ -626,8 +621,6 @@ def create_artist_submission():
 @app.route('/shows')
 def shows():
   str(Show.start_time)
-  # displays list of shows at /shows
-  # TODO: replace with real venues data.
   data = []
   for n in range(len(Show.query.all())):
     venue_name = Venue.query.get(25).name
