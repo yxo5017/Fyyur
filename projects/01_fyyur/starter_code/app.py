@@ -4,7 +4,7 @@
 import collections
 import collections.abc
 collections.Callable = collections.abc.Callable
-
+import sys, traceback
 import config
 import json
 import dateutil.parser
@@ -332,33 +332,28 @@ def delete_venue(venue_id):
 #  ----------------------------------------------------------------
 @app.route('/artists')
 def artists():
-  # TODO: replace with real data returned from querying the database
-  # data=[{
-  #   "id": 4,
-  #   "name": "Guns N Petals",
-  # }, {
-  #   "id": 5,
-  #   "name": "Matt Quevedo",
-  # }, {
-  #   "id": 6,
-  #   "name": "The Wild Sax Band",
-  # }]
-  return render_template('pages/artists.html', artists=Artist.query.all())
+  data = []
+  for n in Artist.query.all():
+    data.append({
+      "id": n.id,
+      "name": n.name
+    })
+  return render_template('pages/artists.html', artists=data)
   ## return render_template('pages/artists.html', artists=Artist.query.all())
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
-  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.：完了
-  # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
-  # search for "band" should return "The Wild Sax Band".
+  search_term = request.form.get('search_term', '')
+  artists = Artist.query.filter(Artist.name.ilike("%" + search_term + "%")).all()
   response={
-    "count": 1,
-    "data": [{
-      "id": 4,
-      "name": "Guns N Petals",
-      "num_upcoming_shows": 0,
-    }]
+    "count": len(artists),
+    "data": []
   }
+  for artist in artists:
+    response["data"].append({
+      'id':artist.id,
+      'name':artist.name
+    })
   return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
 
 @app.route('/artists/<int:artist_id>')
@@ -466,42 +461,25 @@ def edit_artist(artist_id):
 def edit_artist_submission(artist_id):
   # TODO: take values from the form submitted, and update existing：完了
   # artist record with ID <artist_id> using the new attributes
-
-  artist_id = artist_id
-  name = request.form.get('name', '')
-  city = request.form.get('city', '')
-  state = request.form.get('state', '')
-  phone = request.form.get('phone', '')
-  genres = request.form.getlist('genres')
-  facebook_link = request.form.get('facebook_link', '')
-  image_link = request.form.get('image_link', '')
-  website_link = request.form.get('website_link', '')
-  looking_for_venue_params = request.form.get('seeking_venue', '')
-  seeking_description = request.form.get('seeking_description', '')
-  print(genres)
+  form = ArtistForm(request.form)
   try:
-    # new_artist = Artist(name=name, city=city, state=state, phone=phone, genres=genres, image_link=image_link, facebook_link=facebook_link, website_link=website_link, looking_for_venues=looking_for_venues, seeking_description=seeking_description)
     old_artist = Artist.query.get(artist_id)
-    old_artist.name = name
-    old_artist.city = city
-    old_artist.state = state
-    old_artist.phone = phone
-    old_artist.genres = genres
-    old_artist.facebook_link = facebook_link
-    old_artist.image_link = image_link
-    old_artist.website_link = website_link
-    # if looking_for_venue_params == True:
-    #   looking_for_venues = True
-    # else:
-    #   looking_for_venues = False
-    # old_artist.looking_for_venues = 'y'
-    old_artist.seeking_description = seeking_description
+    old_artist.name = form.name.data
+    old_artist.city = form.city.data
+    old_artist.state = form.state.data
+    old_artist.phone = form.phone.data
+    old_artist.genres = form.genres.data
+    old_artist.facebook_link = form.facebook_link.data
+    old_artist.image_link = form.image_link.data
+    old_artist.website_link = form.website_link.data
+    old_artist.looking_for_venues = form.seeking_venue.data
+    old_artist.seeking_description = form.seeking_description.data
     db.session.commit()
     flash('Artist ' + request.form['name'] + ' was successfully updated!')
   except:
     db.session.rollback()
     error=True
-    flash('An error occurred. Artist ' + name + ' could not be updated.')
+    flash('An error occurred. Artist ' + request.form['name'] + ' could not be updated.')
   finally:
     db.session.close()
   return redirect(url_for('show_artist', artist_id=artist_id))
@@ -532,39 +510,40 @@ def edit_venue(venue_id):
 def edit_venue_submission(venue_id):
   # TODO: take values from the form submitted, and update existing
   # venue record with ID <venue_id> using the new attributes
-  venue_id = venue_id
-  name = request.form.get('name', '')
-  city = request.form.get('city', '')
-  state = request.form.get('state', '')
-  phone = request.form.get('phone', '')
-  address = request.form.get('address', '')
-  genres = request.form.getlist('genres')
-  facebook_link = request.form.get('facebook_link', '')
-  image_link = request.form.get('image_link', '')
-  website_link = request.form.get('website_link', '')
-  looking_for_talent = request.form.get('seeking_talent', '')
-  print(looking_for_talent)
-  seeking_description = request.form.get('seeking_description', '')
-  print(genres)
+  # venue_id = venue_id
+  # name = request.form.get('name', '')
+  # city = request.form.get('city', '')
+  # state = request.form.get('state', '')
+  # phone = request.form.get('phone', '')
+  # address = request.form.get('address', '')
+  # genres = request.form.getlist('genres')
+  # facebook_link = request.form.get('facebook_link', '')
+  # image_link = request.form.get('image_link', '')
+  # website_link = request.form.get('website_link', '')
+  # looking_for_talent = request.form.get('seeking_talent', '')
+  # print(looking_for_talent)
+  # seeking_description = request.form.get('seeking_description', '')
+  form = VenueForm(request.form)  
+  
   try:
     old_venue = Venue.query.get(venue_id)
-    old_venue.name = name
-    old_venue.city = city
-    old_venue.state = state
-    old_venue.phone = phone
-    old_venue.address = address
-    old_venue.genres = genres
-    old_venue.facebook_link = facebook_link
-    old_venue.image_link = image_link
-    old_venue.website_link = website_link
-    old_venue.looking_for_talent = looking_for_talent
-    old_venue.seeking_description = seeking_description
+    old_venue.name = form.name.data
+    old_venue.city = form.city.data
+    old_venue.state = form.state.data
+    old_venue.phone = form.phone.data
+    old_venue.address = form.address.data
+    old_venue.genres = form.genres.data
+    old_venue.facebook_link = form.facebook_link.data
+    old_venue.image_link = form.image_link.data
+    old_venue.website_link = form.website_link.data
+    old_venue.looking_for_talent = form.seeking_talent.data
+    old_venue.seeking_description = form.seeking_description.data
     db.session.commit()
     flash('Venue ' + request.form['name'] + ' was successfully updated!')
   except:
     db.session.rollback()
     error=True
-    flash('An error occurred. Venue ' + name + ' could not be updated.')
+    flash('An error occurred. Venue ' + request.form['name'] + ' could not be updated.')
   finally:
     db.session.close()
   return redirect(url_for('show_venue', venue_id=venue_id))
@@ -593,12 +572,15 @@ def create_artist_submission():
       looking_for_venues=form.seeking_venue.data, 
       seeking_description=form.seeking_description.data
     )
+
+
     if form.validate():
       db.session.add(artist)
       db.session.commit()
       flash('Artist ' + request.form['name'] + ' was successfully listed!')
     else:
-      flash('fail')
+      print("sys.exc_info():")
+      print(sys.exc_info())
   except:
     db.session.rollback()
     error=True
@@ -616,49 +598,16 @@ def create_artist_submission():
 
 @app.route('/shows')
 def shows():
-  str(Show.start_time)
   data = []
-  for n in range(len(Show.query.all())):
-    venue_name = Venue.query.get(25).name
-    sample = {
-      "venue_id": Show.query[n].venue_id,
-      "venue_name": Venue.query.get(Show.query[n].venue_id).name,
-      "artist_id": Show.query[n].artist_id,
-      "artist_name": Artist.query.get(Show.query[n].artist_id).name,
-      "artist_image_link": Artist.query.get(Show.query[n].artist_id).image_link,
-      "start_time": Show.query[n].start_time
-    }
-    data.append(sample)
-    print(data)
-  
-  test = {
-    "venue_id": 1,
-    "venue_name": "The Musical Hop",
-    "artist_id": 4,
-    "artist_name": "Guns N Petals",
-    "artist_image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-    "start_time": "2019-05-21T21:30:00.000Z"
-  }
-  test2 = {
-    "venue_id": 3,
-    "venue_name": "Park Square Live Music & Coffee",
-    "artist_id": 5,
-    "artist_name": "Matt Quevedo",
-    "artist_image_link": "https://images.unsplash.com/photo-1495223153807-b916f75de8c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
-    "start_time": "2019-06-15T23:00:00.000Z"
-  }
-  test3 = {
-    "venue_id": 3,
-    "venue_name": "Park Square Live Music & Coffee",
-    "artist_id": 6,
-    "artist_name": "The Wild Sax Band",
-    "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-    "start_time": "2035-04-01T20:00:00.000Z"
-  }
-  data1 = []
-  data1.append(test)
-  data1.append(test2)
-  data1.append(test3)
+  for n in Show.query.all():
+    data.append({
+      "venue_id": n.venue_id,
+      "venue_name": Venue.query.filter_by(id=n.venue_id).first().name,
+      "artist_id": n.artist_id,
+      "artist_name": Artist.query.filter_by(id=n.artist_id).first().name,
+      "artist_image_link": Artist.query.filter_by(id=n.artist_id).first().image_link,
+      "start_time": n.start_time.strftime("%m/%d/%Y, %H:%M:%S")
+    })
   return render_template('pages/shows.html', shows=data)
 
 @app.route('/shows/create')
