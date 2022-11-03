@@ -4,7 +4,7 @@
 import collections
 import collections.abc
 collections.Callable = collections.abc.Callable
-import sys, traceback
+
 import config
 import json
 import dateutil.parser
@@ -559,37 +559,32 @@ def create_artist_form():
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
   form = ArtistForm(request.form)  
-  try:
-    artist = Artist(
-      name=form.name.data, 
-      city=form.city.data, 
-      state=form.state.data, 
-      phone=form.phone.data, 
-      genres=form.genres.data, 
-      image_link=form.image_link.data, 
-      facebook_link=form.facebook_link.data, 
-      website_link=form.website_link.data, 
-      looking_for_venues=form.seeking_venue.data, 
-      seeking_description=form.seeking_description.data
-    )
-
-
-    if form.validate():
+  if form.validate():
+    try:
+      artist = Artist(
+        name=form.name.data, 
+        city=form.city.data, 
+        state=form.state.data, 
+        phone=form.phone.data, 
+        genres=form.genres.data, 
+        image_link=form.image_link.data, 
+        facebook_link=form.facebook_link.data, 
+        website_link=form.website_link.data, 
+        looking_for_venues=form.seeking_venue.data, 
+        seeking_description=form.seeking_description.data
+      )
       db.session.add(artist)
       db.session.commit()
       flash('Artist ' + request.form['name'] + ' was successfully listed!')
-    else:
-      print("sys.exc_info():")
-      print(sys.exc_info())
-  except:
-    db.session.rollback()
-    error=True
-    flash('An error occurred. Artist ' + name + ' could not be listed.')
-  finally:
-    db.session.close()
-  # called upon submitting the new artist listing form
-  # TODO: insert form data as a new Venue record in the db, instead
-  # TODO: modify data to be the data object returned from db insertion
+      
+    except:
+      db.session.rollback()
+      error=True
+      flash('An error occurred. Artist ' + name + ' could not be listed.')
+    finally:
+      db.session.close()
+  else:
+    print("error")
   return render_template('pages/home.html')
 
 
